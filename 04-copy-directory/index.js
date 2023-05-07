@@ -1,27 +1,33 @@
-const fs = require('fs');
+const { readdir, open } =  require('node:fs/promises');
+const { mkdir, copyFile } =  require('node:fs');
 const path = require('path');
+
+async function getFiles (dirPath) {
+  try {
+    return await readdir(dirPath);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+const copyFiles = (files, srcFilesDir, copyFilesDir) => {
+  files.forEach(file => {
+    const srcFilePath = path.join(srcFilesDir, file);
+    const copyFilePath = path.join(copyFilesDir, file);
+    open(copyFilePath, 'w');
+    copyFile(srcFilePath, copyFilePath, err => {
+      if (err) throw err;
+    });
+  });
+};
 
 const copyDir = (folderName) => {
   const srcFilesDir = path.join(__dirname, folderName);
   const copyFilesDir = path.join(__dirname, 'files-copy');
-  fs.mkdir(copyFilesDir, { recursive: true}, err => {
+  mkdir(copyFilesDir, { recursive: true}, err => {
     if (err) throw err;
   });
-  fs.readdir(srcFilesDir, (err, files) => {
-    if (err) throw err;
-    else {
-      files.forEach(file => {
-        const srcFilePath = path.join(srcFilesDir, file);
-        const copyFilePath = path.join(copyFilesDir, file);
-        fs.open(copyFilePath, 'w', (err) => {
-          if(err) throw err;
-        });
-        fs.copyFile(srcFilePath, copyFilePath, err => {
-          if (err) throw err;
-        });
-      });
-    }
-  });
+  getFiles(srcFilesDir).then(data => copyFiles(data, srcFilesDir, copyFilesDir));
 };
 
 copyDir('files');
