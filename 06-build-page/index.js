@@ -1,8 +1,8 @@
 const { readdir, readFile } =  require('node:fs/promises');
-const { mkdir, createReadStream, createWriteStream } =  require('node:fs');
+const { mkdir, createReadStream, createWriteStream, stat } =  require('node:fs');
 const path = require('path');
 
-const createDistFolder = (folderPath) => {
+const createFolder = (folderPath) => {
   mkdir(folderPath, { recursive: true }, err => {
     if (err) throw err;
   });
@@ -31,14 +31,36 @@ async function buildPage(componentsPath) {
   htmlWriteStream.write(await insertComponents(componentsPath));
 }
 
-createDistFolder(path.join(__dirname, 'project-dist'));
+const writeToBundle = (fileName, filePath, writeStream) => {
+  stat(filePath,
+    (err, stats) => {
+      if (err) throw err;
+      if (stats.isFile(fileName) && path.extname(fileName) === '.css') {
+        const cssReadStream = createReadStream(filePath, 'utf-8');
+        cssReadStream.pipe(writeStream);
+      }
+    });
+};
 
-const templateReadStream = createReadStream(path.join(__dirname, 'template.html'));
+async function createBundleCSS() {
+  const stylesPath = path.join(__dirname, 'styles');
+  const files = await getFiles(stylesPath);
+  const bundleWriteStream = createWriteStream(path.join(__dirname, 'project-dist/style.css'));
+  files.forEach(file => {
+    writeToBundle(file, path.join(stylesPath, file), bundleWriteStream);
+  });
+}
 
+
+createFolder(path.join(__dirname, 'project-dist')); // create dist folder
+
+const templateFileReadStream = createReadStream(path.join(__dirname, 'template.html'));
 let pageLayout = '';
 
-templateReadStream
+templateFileReadStream
   .on('data', data => pageLayout += data)
   .on('end', () => {
     buildPage(path.join(__dirname, 'components'));
   });
+
+createBundleCSS();
