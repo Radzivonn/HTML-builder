@@ -1,20 +1,25 @@
-const fs = require('fs');
+const { readdir } =  require('node:fs/promises');
+const { stat } =  require('node:fs');
 const path = require('path');
 
-const readFilesFromFolder = (folderName) => {
-  fs.readdir(path.join(__dirname, folderName), (err, files) => {
-		if (err) throw err;
-    else {
-      files.forEach(file => {
-        fs.stat(path.join(__dirname, folderName + '/' + file),
-          (err, stats) => {
-            if (err) throw err;
-            else if (stats.isFile(file))
-              console.log(`${file.slice(0, file.indexOf('.'))} - ${path.extname(file).slice(1)} - ${stats.size / 1000}kb`);
-          });
-      });
-    }
-  });
+async function getFiles (dirPath) {
+  try {
+    return await readdir(dirPath);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+const getFileData = (folderName, fileName) => {
+  stat(path.join(__dirname, folderName, fileName),
+    (err, stats) => {
+      if (err) throw err;
+      else if (stats.isFile(fileName))
+        console.log(`${fileName.slice(0, fileName.indexOf('.'))} - ${path.extname(fileName).slice(1)} - ${Math.ceil(stats.size / 1024)}kb`);
+    });
 };
 
-readFilesFromFolder('secret-folder');
+const getFilesData = (folderName, files) => files.forEach(file => getFileData(folderName, file));
+
+
+getFiles(path.join(__dirname, 'secret-folder')).then(data => getFilesData('secret-folder', data));
