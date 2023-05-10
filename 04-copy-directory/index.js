@@ -1,4 +1,4 @@
-const { readdir, open } =  require('node:fs/promises');
+const { readdir, open, rm } =  require('node:fs/promises');
 const { mkdir, copyFile } =  require('node:fs');
 const path = require('path');
 
