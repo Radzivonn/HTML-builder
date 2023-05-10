@@ -30,4 +30,5 @@ const copyDir = (folderName) => {
   getFiles(srcFilesDir).then(data => copyFiles(data, srcFilesDir, copyFilesDir));
 };
 
-copyDir('files');
+rm(path.join(__dirname, 'files-copy'), { recursive: true, force: true })
+  .then(() => copyDir('files'));
