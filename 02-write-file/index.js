@@ -8,5 +8,5 @@ const fileWriteStream = fs.createWriteStream(path.join(__dirname, 'text.txt'));
 console.log('Hi, dude! Enter text!');
 
 cmd
-  .on('line', inputData => inputData === 'exit' ? cmd.close() : fileWriteStream.write(inputData))
+  .on('line', inputData => inputData === 'exit' ? cmd.close() : fileWriteStream.write(`${inputData}\n`))
   .on('close', () => console.log('Bye bye!'));
